@@ -1,0 +1,21 @@
+{
+    "name": "mql21/csv-importer",
+    "description": "A tool to import CSV files in Symfony applications",
+    "type": "library",
+    "license": "AGPL-3.0-only",
+    "authors": [
+        {
+            "name": "Miquel Perez",
+            "email": "mql21.12@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "CsvImporter\\": "src/CsvImporter"
+        }
+    }
+
+}
