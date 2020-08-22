@@ -73,7 +73,9 @@ $tableName = "test.person";
 $completeMessage = $csvImporter->import($csvPath, $tableName);
 ```
 
-TIP: Make sure to always inject `CsvImporterInterface` to follow Dependency Inversion Principle.
+TIP: Make sure to always inject `CsvImporterInterface` in your classes to follow Dependency Inversion Principle.
+
+To see an example of usage of CsvImporter, please visit this repo: https://github.com/miquelp/Csv-Importer-Example
 
 ## Some interesting data
 
