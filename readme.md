@@ -108,6 +108,7 @@ Here's a list of TODO's that can be done right now:
 
 * Adding support for related tables. CsvImporter is meant to be used to write data into a single table, so relations aren't implemented yet. It would be interesting to add some sort of mechanism to allow the possibility to write into multiple related tables.
 * Adding some unit testing.
+* Apply SRP to `CsvImporterMysqlBuilder.php` by extracting validation methods to separate class.
 * Adding more field validations. At this point, there is only two validations: required and decimal. Any other field validation would be very welcome.
 * Making this library framework-agnostic. Now it is clearly implemented to work along with Symfony, but it would be interesting to add support for other frameworks as well. 
 
