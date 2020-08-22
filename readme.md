@@ -17,62 +17,68 @@ composer require mql21/csv-importer:dev-master
 
 ## Setting up CsvImporter
 
-Before using CsvImporter, it needs to be set up. To do so, you need to specify the mapping between the CSV and the database table in the `services.yaml` file:
+Before using CsvImporter, it needs to be set up.
 
+First off, you need to allow CsvImporterInterface to be injected as a service throughout your application, add this line to the `services.yaml` file:
 ```
-parameters:
-    csv_mapping_fields:
-        company: # Table name
-            company_name: # CSV column name
-                column_name: 'company_name' # Mapped database column name
-                required: true # True if this field can not be empty in CSV
-            registration_id:
-                column_name: 'registration_id'
-                required: true
+mql21\CsvImporter\CsvImporterInterface: ~
+```
+Now configure CsvImporter dependencies, add:
+```
+mql21\CsvImporter\Builder\CsvImporterMysqlBuilder:
+    arguments:
+        $csvMappingFields: "%csv_mapping_fields%"
+
+csv_importer.mysql_builder:
+    class: mql21\Adapter\CsvImporter\Builder\CsvImporterMysqlBuilder
+
+mql21\CsvImporter\Adapter\CsvImporterMysqlAdapter:
+    arguments:
+        $csvImporterMysqlBuilder: "@csv_importer.mysql_builder"
+
+csv_importer.mysql_adapter:
+    class: mql21\CsvImporter\Adapter\CsvImporterMysqlAdapter
 ```
 
-In order to be able to inject CsvImporter as a service, register the following entry to the `services.yaml`:
-
+Then, you can simply autowire the MySQL adapter to your controller, service or wherever you desire in your app:
 ```
-CsvImporter\:
-        resource: '../vendor/mql21/csv-importer/src/CsvImporter/*'
-```
-
-Then, the `csv_mapping_fields` var needs to be injected to the CsvImporter class. Just add the following configuration at the bottom of the `services.yaml` file:
-
-```
-CsvImporter\CsvImporter:
-        arguments:
-            $csvMappingFields: "%csv_mapping_fields%"
+App\Service\Import\MyImportService:
+    arguments:
+        $csvImporter: "@csv_importer.mysql_adapter"
 ```
 
 
 ## Using CsvImporter
 
-CsvImporter can be easily used as shown in the following example:
+CSV data needs to be defined in `services.yaml` so that the importer knows what the mapping between the CSV and the database is. To do so, you can define the following config under the `parameters` section:
 
 ```
-$file = $form['attachment']->getData();
+parameters:
+    csv_mapping_fields:
+        test.person: ## database.destination_table_name
+            name: ## csv column name
+                column_name: 'name' ## database table name
+                required: true ## cannot be empty in csv
+            surname:
+                column_name: 'surname'
+                required: true
+```
+All CSV configs need to be defined under the `csv_mapping_fields` scope.
 
-$completeMessage = $csvImporter
-    ->setCsvFilePath($file->getRealPath())
-    ->setDestinationTable('my_table')
-    ->enableOnDuplicateKeyUpdate()
-    ->save();
+Now you can inject `CsvImporterInterface` throughout your app and perform the import as follows:
+
+```
+$csvPath = "some/csv/path/file.csv";
+$tableName = "test.person";
+$completeMessage = $csvImporter->import($csvPath, $tableName);
 ```
 
-`$form['atachment']` is a `FileType` form type that returns an `UploadedFile` instance containing the CSV file that we uploaded through the form.
+TIP: Make sure to always inject `CsvImporterInterface` to follow Dependency Inversion Principle.
 
-To actually write the entire CSV into the database, you only need to call 4 methods:
-
-* `setCsvFilePath($filepath)`: The filepath of the uploaded CSV. If you're using a form with a `FileType` like in the example, filepath can be obtained by calling the `getRealPath()` method.
-* `setDestinationTable('my_table')`: The table where the CSV data will be written into.  This needs to match the exact name of the table in the database.
-* `enableOnDuplicateKeyUpdate()`: This optional method will enable the `ON DUPLICATE KEY UPDATE` clause in the query that will be performed to write the data. This way, if any **unique key** (simple or compound) is duplicated, the row will be rather updated.
-* `save()`: Writes the CSV data to the database.
+## Some interesting data
 
 Note: As you might have noticed, `$csvImporter` isn't declared explicitly since it's meant to be injected via DI. 
 
-## Some interesting data
 
 As the following chart clearly shows, persisting entities into the database using Doctrine's EntityManager can take some time, especially if we're working with relatively large data sets:
 
