@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "CsvImporter\\": "src/CsvImporter"
+            "mql21\\CsvImporter\\": "src/"
         }
     }
 
