@@ -5,6 +5,7 @@ namespace mql21\CsvImporter\Builder;
 
 
 use Doctrine\ORM\EntityManagerInterface;
+use mql21\CsvImporter\csvImporter\SanitizationHelper;
 
 class CsvImporterMysqlBuilder
 {
@@ -17,16 +18,23 @@ class CsvImporterMysqlBuilder
     private $csvMappingFields;
     private $completeMessage;
     private $success;
+    private $sanitizationHelper;
 
-    /**
-     * ImportCsvService constructor.
-     * @param EntityManagerInterface $entityManager
-     * @param array $csvMappingFields (Needs to be defined in services.yaml)
-     */
-    public function __construct(EntityManagerInterface $entityManager, array $csvMappingFields)
+  /**
+   * ImportCsvService constructor.
+   * @param EntityManagerInterface $entityManager
+   * @param array $csvMappingFields (Needs to be defined in services.yaml)
+   * @param SanitizationHelper $sanitizationHelper
+   */
+    public function __construct(
+      EntityManagerInterface $entityManager,
+      array $csvMappingFields,
+      SanitizationHelper $sanitizationHelper
+    )
     {
         $this->entityManager = $entityManager;
         $this->csvMappingFields = $csvMappingFields;
+        $this->sanitizationHelper = $sanitizationHelper;
     }
 
     public function setCsvFilePath(string $csvFilePath)
@@ -271,18 +279,10 @@ class CsvImporterMysqlBuilder
 
         switch ($this->csvMappingFields[$columnName]['validate']) {
             case 'decimal':
-                return $this->sanitizeDecimal($columnValue);
+                return $this->sanitizationHelper->sanitizeDecimal($columnValue);
                 break;
         }
 
         return $columnValue;
-    }
-
-    function sanitizeDecimal($val)
-    {
-        $val = str_replace(",", ".", $val);
-        $val = preg_replace('/\.(?=.*\.)/', '', $val);
-
-        return floatval($val);
     }
 }
